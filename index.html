@@ -37,12 +37,11 @@
         background: #f5f7ff;
         border: 2px dashed #9bb1ff;
         border-radius: 8px;
-        padding: 8px;
-        min-height: 48px;
+        padding: 6px 8px;
+        min-height: 44px;
         margin-bottom: 6px;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
         font-size: 13px;
         color: #555;
         box-sizing: border-box;
@@ -56,8 +55,14 @@
         font-weight: bold;
         color: #1B4B8C;
         font-size: 12px;
-        margin-right: 8px;
+        margin-right: 6px;
         white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .slot-text {
+        font-size: 12px;
+        color: #666;
     }
 
     .slot.filled {
@@ -82,7 +87,7 @@
 
     .adjetivo-card {
         background: #ffffff;
-        padding: 8px 10px;
+        padding: 6px 8px;
         border-radius: 8px;
         margin-bottom: 6px;
         font-size: 13px;
@@ -110,7 +115,7 @@
         position: fixed;
         z-index: 9999;
         max-width: 92%;
-        padding: 8px 10px;
+        padding: 6px 8px;
         background: #ffffff;
         border-radius: 8px;
         box-shadow: 0 5px 10px rgba(0,0,0,0.25);
@@ -141,19 +146,19 @@
 </div>
 
 <div class="container-ranking" id="ranking">
-    <div class="slot" data-pos="1" data-placeholder="1º lugar – O que MAIS se parece com você">
+    <div class="slot" data-pos="1">
         <span class="slot-label">1º</span>
         <span class="slot-text">O que MAIS se parece com você</span>
     </div>
-    <div class="slot" data-pos="2" data-placeholder="2º lugar – O segundo mais parecido">
+    <div class="slot" data-pos="2">
         <span class="slot-label">2º</span>
         <span class="slot-text">O segundo mais parecido</span>
     </div>
-    <div class="slot" data-pos="3" data-placeholder="3º lugar – O terceiro mais parecido">
+    <div class="slot" data-pos="3">
         <span class="slot-label">3º</span>
         <span class="slot-text">O terceiro mais parecido</span>
     </div>
-    <div class="slot" data-pos="4" data-placeholder="4º lugar – O que MENOS se parece com você">
+    <div class="slot" data-pos="4">
         <span class="slot-label">4º</span>
         <span class="slot-text">O que MENOS se parece com você</span>
     </div>
@@ -183,6 +188,10 @@
 <script>
 let draggingCard = null;
 let ghost = null;
+let originSlot = null; // se o card veio de um slot, guardamos aqui
+
+const lista = document.getElementById("lista");
+const slots = document.querySelectorAll(".slot");
 
 /* ---------------- MOBILE: seguir o dedo ---------------- */
 
@@ -190,6 +199,7 @@ document.querySelectorAll(".adjetivo-card").forEach(card => {
 
     card.addEventListener("touchstart", e => {
         draggingCard = card;
+        originSlot = card.closest(".slot");
 
         ghost = card.cloneNode(true);
         ghost.classList.add("drag-ghost");
@@ -220,9 +230,15 @@ document.querySelectorAll(".adjetivo-card").forEach(card => {
         const elem = document.elementFromPoint(touch.clientX, touch.clientY);
 
         const slot = elem ? elem.closest(".slot") : null;
+        const listaDrop = elem ? elem.closest("#lista") : null;
 
         if (slot) {
-            preencherSlot(slot, draggingCard);
+            colocarCardNoSlot(slot, draggingCard);
+        } else if (listaDrop) {
+            // soltar na lista -> volta para a lista
+            devolverParaLista(draggingCard);
+        } else {
+            // soltou em qualquer outro lugar, não muda a posição
         }
 
         if (ghost) {
@@ -230,6 +246,7 @@ document.querySelectorAll(".adjetivo-card").forEach(card => {
             ghost = null;
         }
         draggingCard = null;
+        originSlot = null;
     });
 });
 
@@ -238,79 +255,117 @@ document.querySelectorAll(".adjetivo-card").forEach(card => {
 document.querySelectorAll(".adjetivo-card").forEach(card => {
     card.addEventListener("dragstart", () => {
         draggingCard = card;
+        originSlot = card.closest(".slot");
         setTimeout(() => card.style.opacity = "0.3", 0);
     });
 
     card.addEventListener("dragend", () => {
         if (draggingCard) draggingCard.style.opacity = "1";
         draggingCard = null;
+        originSlot = null;
     });
 });
 
-document.querySelectorAll(".slot").forEach(slot => {
-
+slots.forEach(slot => {
     slot.addEventListener("dragover", e => e.preventDefault());
 
     slot.addEventListener("drop", () => {
         if (!draggingCard) return;
-        preencherSlot(slot, draggingCard);
+        colocarCardNoSlot(slot, draggingCard);
     });
 
     // Clique no slot para limpar e devolver o adjetivo
     slot.addEventListener("click", () => {
-        if (slot.dataset.cardId) {
+        if (slot.querySelector(".adjetivo-card")) {
             removerDoSlot(slot);
         }
     });
 });
 
+// Permite soltar na lista no desktop
+lista.addEventListener("dragover", e => e.preventDefault());
+lista.addEventListener("drop", () => {
+    if (!draggingCard) return;
+    devolverParaLista(draggingCard);
+});
+
 /* ---------------- FUNÇÕES PRINCIPAIS ---------------- */
 
-function preencherSlot(slot, card) {
-    // Se já tinha algo aqui, devolve pra lista
-    removerDoSlot(slot);
-
-    // Marca o texto do adjetivo dentro da caixa
-    const textEl = slot.querySelector(".slot-text");
-    if (textEl) {
-        textEl.textContent = card.innerText.replace("☰", "").trim();
-    } else {
-        slot.textContent = card.innerText.replace("☰","").trim();
+function colocarCardNoSlot(slot, card) {
+    // Se o card já estava em outro slot, limpa o slot de origem
+    const slotOrigem = originSlot || card.closest(".slot");
+    if (slotOrigem && slotOrigem !== slot) {
+        limparSlot(slotOrigem);
     }
+
+    // Se o slot alvo já tiver um card, devolve aquele card para a lista
+    const cardExistente = slot.querySelector(".adjetivo-card");
+    if (cardExistente && cardExistente !== card) {
+        devolverParaLista(cardExistente);
+    }
+
+    // Esconde o texto placeholder do slot
+    const textEl = slot.querySelector(".slot-text");
+    if (textEl) textEl.style.display = "none";
 
     slot.classList.add("filled");
     slot.dataset.cardId = card.dataset.id;
 
-    // Some da lista, mas sem perder referência (para poder voltar)
-    card.style.display = "none";
+    card.style.display = "flex";
+    slot.appendChild(card);
 }
 
-function removerDoSlot(slot) {
-    const id = slot.dataset.cardId;
-    if (!id) return;
-
-    const card = document.querySelector(`.adjetivo-card[data-id="${id}"]`);
+function limparSlot(slot) {
+    const card = slot.querySelector(".adjetivo-card");
     if (card) {
+        // devolve card à lista
         card.style.display = "flex";
+        lista.appendChild(card);
     }
 
-    const placeholder = slot.dataset.placeholder || "";
-    const pos = slot.getAttribute("data-pos");
+    slot.classList.remove("filled");
+    slot.removeAttribute("data-cardId");
 
     const textEl = slot.querySelector(".slot-text");
     if (textEl) {
-        // Devolve a frase padrão
+        const pos = slot.getAttribute("data-pos");
         if (pos === "1") textEl.textContent = "O que MAIS se parece com você";
         else if (pos === "2") textEl.textContent = "O segundo mais parecido";
         else if (pos === "3") textEl.textContent = "O terceiro mais parecido";
         else if (pos === "4") textEl.textContent = "O que MENOS se parece com você";
-        else textEl.textContent = placeholder;
-    } else {
-        slot.textContent = placeholder || (pos + "º lugar – Coloque aqui");
+        textEl.style.display = "inline";
     }
+}
 
+function removerDoSlot(slot) {
+    const card = slot.querySelector(".adjetivo-card");
+    if (card) {
+        card.style.display = "flex";
+        lista.appendChild(card);
+    }
     slot.classList.remove("filled");
-    delete slot.dataset.cardId;
+    slot.removeAttribute("data-cardId");
+
+    const textEl = slot.querySelector(".slot-text");
+    if (textEl) {
+        const pos = slot.getAttribute("data-pos");
+        if (pos === "1") textEl.textContent = "O que MAIS se parece com você";
+        else if (pos === "2") textEl.textContent = "O segundo mais parecido";
+        else if (pos === "3") textEl.textContent = "O terceiro mais parecido";
+        else if (pos === "4") textEl.textContent = "O que MENOS se parece com você";
+        textEl.style.display = "inline";
+    }
+}
+
+function devolverParaLista(card) {
+    const slotAtual = card.closest(".slot");
+    if (slotAtual) {
+        limparSlot(slotAtual);
+    } else {
+        // já estava na lista, garante exibição
+        card.style.display = "flex";
+        lista.appendChild(card);
+    }
 }
 </script>
 
