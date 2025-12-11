@@ -250,7 +250,9 @@
     }
 
     .nav-grupo {
-        text-align: right;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
         margin-top: 10px;
     }
 
@@ -312,6 +314,9 @@
         .cards-perfil { grid-template-columns: 1fr 1fr; }
         body {
             padding-bottom: 30px;
+        }
+        .nav-grupo {
+            flex-direction: column;
         }
     }
 </style>
@@ -391,6 +396,7 @@
     <div class="adjetivos-lista" id="lista"></div>
 
     <div class="nav-grupo">
+        <button id="btnVoltar" onclick="voltarGrupo()">VOLTAR</button>
         <button id="btnProximo" onclick="avancarOuFinalizar()">PRÓXIMA PÁGINA</button>
     </div>
 </div>
@@ -495,7 +501,7 @@ let respostas = []; // cada posição: array de 4 letras, ex: ["D","I","S","C"]
 const lista = document.getElementById("lista");
 const slots = Array.from(document.querySelectorAll(".slot"));
 
-/* ---------- FUNÇÕES DE RANKING (GENÉRICAS) ---------- */
+/* ---------- FUNÇÕES DE RANKING ---------- */
 
 function resetSlotPlaceholder(slot) {
     const pos = slot.getAttribute("data-pos");
@@ -625,8 +631,6 @@ function attachDragEventsToCards() {
             draggingCard = null;
         });
     });
-
-    // Slots e lista já existem desde o início, listeners só precisam ser criados uma vez
 }
 
 slots.forEach(slot => {
@@ -686,7 +690,7 @@ function carregarGrupo(idx) {
     }
 
     atualizarProgresso();
-    atualizarBotao();
+    atualizarBotoes();
     window.scrollTo(0,0);
 }
 
@@ -704,13 +708,12 @@ function atualizarProgresso() {
     document.getElementById("progress-bar").style.width = `${perc}%`;
 }
 
-function atualizarBotao() {
-    const btn = document.getElementById("btnProximo");
-    if (currentGrupo === grupos.length - 1) {
-        btn.textContent = "FINALIZAR TESTE";
-    } else {
-        btn.textContent = "PRÓXIMA PÁGINA";
-    }
+function atualizarBotoes() {
+    const btnProx = document.getElementById("btnProximo");
+    const btnVoltar = document.getElementById("btnVoltar");
+
+    btnVoltar.style.display = currentGrupo === 0 ? "none" : "inline-block";
+    btnProx.textContent = currentGrupo === grupos.length - 1 ? "FINALIZAR TESTE" : "PRÓXIMA PÁGINA";
 }
 
 /* ---------- FLUXO DO TESTE ---------- */
@@ -759,17 +762,28 @@ function avancarOuFinalizar() {
     }
 }
 
+function voltarGrupo() {
+    if (currentGrupo === 0) return;
+
+    // Se o grupo atual estiver completo, salva antes de voltar
+    if (grupoCompleto()) {
+        salvarRespostasDoGrupoAtual();
+    }
+
+    currentGrupo--;
+    carregarGrupo(currentGrupo);
+}
+
 /* ---------- CÁLCULO E RESULTADO ---------- */
 
 function finalizarTeste() {
-    // garante que o último grupo foi salvo
     salvarRespostasDoGrupoAtual();
     calcular();
 }
 
 function calcular() {
     let soma = { D:0, I:0, S:0, C:0 };
-    const pontos = [4,3,2,1]; // 1º,2º,3º,4º
+    const pontos = [4,3,2,1];
 
     respostas.forEach(ordemPerfis => {
         ordemPerfis.forEach((letra, idx) => {
