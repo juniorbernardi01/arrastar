@@ -536,7 +536,46 @@ let respostas = []; // cada posição: array de 4 letras, ex: ["D","I","S","C"]
 const lista = document.getElementById("lista");
 const slots = Array.from(document.querySelectorAll(".slot"));
 
-/* ---------- FUNÇÕES DE RANKING ---------- */
+/* ---------- FUNÇÕES DE LAYOUT / RANKING ---------- */
+
+// layout atual: array de 4 posições, cada uma com card ou null
+function getCurrentLayout() {
+    return slots.map(slot => {
+        const card = slot.querySelector(".adjetivo-card");
+        return card || null;
+    });
+}
+
+// aplica um layout (4 posições), respeitando exatamente 1º, 2º, 3º, 4º
+function applyLayout(layout) {
+    // joga todos os cards para a lista
+    document.querySelectorAll(".adjetivo-card").forEach(card => {
+        lista.appendChild(card);
+    });
+
+    // limpa slots e recoloca de acordo com o layout
+    slots.forEach((slot, idx) => {
+        resetSlotPlaceholder(slot);
+        const card = layout[idx];
+        if (card) {
+            slot.appendChild(card);
+            slot.classList.add("filled");
+            const textEl = slot.querySelector(".slot-text");
+            if (textEl) textEl.style.display = "none";
+            card.style.display = "flex";
+        }
+    });
+}
+
+// ordem compacta (só os cards, de cima pra baixo) – usada na hora de salvar / pontuar
+function getCurrentOrderCards() {
+    const order = [];
+    slots.forEach(slot => {
+        const card = slot.querySelector(".adjetivo-card");
+        if (card) order.push(card);
+    });
+    return order;
+}
 
 function resetSlotPlaceholder(slot) {
     const pos = slot.getAttribute("data-pos");
@@ -550,53 +589,25 @@ function resetSlotPlaceholder(slot) {
     slot.classList.remove("filled");
 }
 
-function getCurrentOrderCards() {
-    const order = [];
-    slots.forEach(slot => {
-        const card = slot.querySelector(".adjetivo-card");
-        if (card) order.push(card);
-    });
-    return order;
-}
-
-function applyOrder(order) {
-    // devolve todos os cards para a lista
-    slots.forEach(slot => {
-        const card = slot.querySelector(".adjetivo-card");
-        if (card) lista.appendChild(card);
-        resetSlotPlaceholder(slot);
-    });
-
-    // coloca os cards na ordem nos slots 1..4
-    order.forEach((card, idx) => {
-        if (idx >= slots.length) return;
-        const slot = slots[idx];
-        slot.appendChild(card);
-        slot.classList.add("filled");
-        const textEl = slot.querySelector(".slot-text");
-        if (textEl) textEl.style.display = "none";
-        card.style.display = "flex";
-    });
-}
-
+// insere o card exatamente na posição (0–3), respeitando 1º, 2º, 3º, 4º
 function insertCardAtIndex(card, targetIndex) {
-    let current = getCurrentOrderCards();
-    current = current.filter(c => c !== card); // se já estava, remove
+    let layout = getCurrentLayout();
+
+    // remove o card do layout, se já estiver em alguma posição
+    layout = layout.map(c => c === card ? null : c);
 
     if (targetIndex < 0) targetIndex = 0;
-    if (targetIndex > current.length) targetIndex = current.length;
+    if (targetIndex > layout.length - 1) targetIndex = layout.length - 1;
 
-    current.splice(targetIndex, 0, card);
-    const finalOrder = current.slice(0, slots.length);
-    applyOrder(finalOrder);
+    layout[targetIndex] = card;
+
+    applyLayout(layout);
 }
 
+// remove o card do ranking e devolve para a lista
 function moveFromRankToList(card) {
-    const current = getCurrentOrderCards();
-    const newOrder = current.filter(c => c !== card);
-    applyOrder(newOrder);
-    lista.appendChild(card);
-    card.style.display = "flex";
+    let layout = getCurrentLayout().map(c => c === card ? null : c);
+    applyLayout(layout);
 }
 
 /* ---------- DRAG & DROP ---------- */
@@ -677,6 +688,7 @@ slots.forEach(slot => {
         insertCardAtIndex(draggingCard, targetIndex);
     });
 
+    // clique no slot tira o card de lá e volta pra lista
     slot.addEventListener("click", () => {
         const card = slot.querySelector(".adjetivo-card");
         if (card) moveFromRankToList(card);
@@ -712,16 +724,18 @@ function carregarGrupo(idx) {
 
     attachDragEventsToCards();
 
-    // se já tinha resposta salva, recarregar ordem
+    // se já tinha resposta salva, recarrega exatamente as posições 1º–4º
     if (respostas[idx]) {
         const ordemPerfis = respostas[idx]; // ex: ["D","I","S","C"]
         const cards = Array.from(document.querySelectorAll(".adjetivo-card"));
-        const ordemCards = [];
-        ordemPerfis.forEach(letra => {
+        const layout = [null, null, null, null];
+
+        ordemPerfis.forEach((letra, pos) => {
             const card = cards.find(c => c.dataset.profile === letra);
-            if (card) ordemCards.push(card);
+            if (card) layout[pos] = card;
         });
-        applyOrder(ordemCards);
+
+        applyLayout(layout);
     }
 
     atualizarProgresso();
@@ -933,7 +947,11 @@ function enviarEmailResultado() {
         i: r.I,
         s: r.S,
         c: r.C,
-        combinacao: r.combinacao
+        combinacao: r.combinacao,
+        top1: r.top1,
+        top2: r.top2,
+        texto_top1: descricoesPerfis[r.top1],
+        texto_top2: descricoesPerfis[r.top2]
     };
 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
