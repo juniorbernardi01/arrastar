@@ -2,32 +2,154 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<title>Teste DISC - Atrius</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ranking DISC – Grupo Compacto Premium</title>
 
 <style>
+    :root {
+        --azul: #1B4B8C;
+        --cinza: #f4f4f4;
+        --cinza-card: #ffffff;
+        --texto: #333;
+
+        --cor-D: #e74c3c;  /* vermelho */
+        --cor-I: #27ae60;  /* verde   */
+        --cor-S: #2980b9;  /* azul    */
+        --cor-C: #f1c40f;  /* amarelo */
+    }
+
     body {
         font-family: Arial, sans-serif;
-        background: #f3f4f6;
-        padding: 12px;
+        margin: 0;
+        padding: 0;
+        background: var(--cinza);
+        color: var(--texto);
     }
 
-    h2 {
-        color: #1B4B8C;
+    /* HEADER */
+    .header {
+        background: #ffffff;
+        border-bottom: 4px solid var(--azul);
+        padding: 20px 0 10px 0;
         text-align: center;
-        margin: 4px 0;
-        font-size: 18px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
 
-    .subtexto {
-        text-align: center;
-        font-size: 13px;
-        color: #555;
+    .header img {
+        height: 65px;
+        object-fit: contain;
+        margin-bottom: 8px;
+    }
+
+    .header-title {
+        color: var(--azul);
+        font-size: 26px;
+        font-weight: bold;
+    }
+
+    /* TELA DE BOAS-VINDAS */
+    #welcome {
+        background: var(--cinza-card);
+        padding: 25px;
+        margin: 25px auto;
+        max-width: 600px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.08);
+    }
+
+    #welcome h2 {
+        color: var(--azul);
         margin-bottom: 10px;
     }
 
+    .campo {
+        margin-bottom: 18px;
+    }
+
+    .campo label {
+        font-weight: bold;
+        color: var(--azul);
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .campo input {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+    button {
+        background: var(--azul);
+        color: white;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+
+    button:hover {
+        background: #143a6a;
+    }
+
+    /* PROGRESSO */
+    #progresso {
+        max-width: 900px;
+        margin: 10px auto 0 auto;
+        display: none;
+    }
+
+    #progresso-numero {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: var(--azul);
+        font-size: 18px;
+    }
+
+    .progress-container {
+        width: 100%;
+        background: #dbe3f5;
+        border-radius: 50px;
+        overflow: hidden;
+        height: 8px;
+    }
+
+    #progress-bar {
+        height: 8px;
+        width: 0;
+        background: var(--azul);
+        transition: width 0.25s ease;
+    }
+
+    /* INSTRUÇÕES */
+    .instrucao {
+        background: #E8F0FF;
+        border-left: 6px solid var(--azul);
+        padding: 15px 20px;
+        margin: 15px auto;
+        max-width: 900px;
+        border-radius: 6px;
+        font-size: 15px;
+        line-height: 1.5;
+        display: none;
+    }
+
+    /* GRUPO (RANKING) */
+    #grupo-wrapper {
+        max-width: 900px;
+        margin: 10px auto 30px auto;
+        display: none;
+    }
+
     .container-ranking {
-        border: 2px solid #1B4B8C;
+        border: 2px solid var(--azul);
         background: #ffffff;
         border-radius: 10px;
         padding: 10px;
@@ -54,7 +176,7 @@
 
     .slot-label {
         font-weight: bold;
-        color: #1B4B8C;
+        color: var(--azul);
         font-size: 12px;
         margin-right: 6px;
         white-space: nowrap;
@@ -68,16 +190,15 @@
 
     .slot.filled {
         border-style: solid;
-        border-color: #1B4B8C;
+        border-color: var(--azul);
         background: #e6edff;
-        color: #1B4B8C;
+        color: var(--azul);
         font-weight: bold;
     }
 
-    /* Lista de adjetivos */
     .adjetivos-titulo {
         font-size: 14px;
-        color: #1B4B8C;
+        color: var(--azul);
         margin: 6px 0 6px 4px;
         font-weight: bold;
     }
@@ -111,7 +232,6 @@
         flex-shrink: 0;
     }
 
-    /* Fantasma do card quando segue o dedo no celular */
     .drag-ghost {
         position: fixed;
         z-index: 9999;
@@ -129,10 +249,69 @@
         gap: 6px;
     }
 
-    @media (min-width: 768px){
+    .nav-grupo {
+        text-align: right;
+        margin-top: 10px;
+    }
+
+    /* RESULTADO */
+    #resultado {
+        margin: 30px auto;
+        padding: 25px;
+        max-width: 900px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.12);
+        display: none;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .cards-perfil {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .card-perfil {
+        border-radius: 10px;
+        padding: 10px;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .card-perfil span.pontuacao {
+        display: block;
+        font-weight: normal;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    .card-D { background: var(--cor-D); }
+    .card-I { background: var(--cor-I); }
+    .card-S { background: var(--cor-S); }
+    .card-C { background: var(--cor-C); }
+
+    .laudo {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        background: #f8f8f8;
+        border-left: 4px solid var(--azul);
+    }
+
+    .laudo h3 {
+        margin-top: 0;
+        font-size: 18px;
+    }
+
+    @media(max-width:768px){
+        button { width: 100%; }
+        .cards-perfil { grid-template-columns: 1fr 1fr; }
         body {
-            max-width: 480px;
-            margin: 0 auto;
+            padding-bottom: 30px;
         }
     }
 </style>
@@ -140,76 +319,183 @@
 
 <body>
 
-<!-- Barra de progresso -->
-<h2>1 de 10</h2>
-<div style="
-    width: 100%;
-    height: 6px;
-    background: #dbe3f5;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    overflow: hidden;">
-    <div id="progressBar" style="
-        width: 10%;
-        height: 100%;
-        background: #1B4B8C;
-        border-radius: 4px;">
+<!-- HEADER -->
+<div class="header">
+    <img src="logo-atrius.png" alt="Atrius">
+    <div class="header-title">Teste DISC - Atrius</div>
+</div>
+
+<!-- TELA INICIAL -->
+<div id="welcome">
+    <h2>Bem-vindo ao Teste DISC da Atrius</h2>
+    <p>Preencha seus dados para iniciar o teste.</p>
+
+    <div class="campo">
+        <label>Nome completo</label>
+        <input id="nome">
+    </div>
+
+    <div class="campo">
+        <label>Telefone (WhatsApp)</label>
+        <input id="telefone" placeholder="(51) 99591-2176">
+    </div>
+
+    <div class="campo">
+        <label>E-mail</label>
+        <input id="email" placeholder="exemplo@dominio.com">
+    </div>
+
+    <button onclick="iniciarTeste()">IR PARA O TESTE</button>
+</div>
+
+<!-- PROGRESSO -->
+<div id="progresso">
+    <div id="progresso-numero">1 de 10</div>
+    <div class="progress-container">
+        <div id="progress-bar"></div>
     </div>
 </div>
 
-<div class="subtexto">
-    Arraste os adjetivos <b>de baixo</b> para as caixas <b>acima</b>.<br>
-    <b>Topo = mais parecido com você</b> &mdash; <b>Última caixa = menos parecido</b>.
+<!-- INSTRUÇÕES -->
+<div class="instrucao">
+    <b>Instruções do Teste DISC</b><br><br>
+    • Em cada grupo, você verá 4 conjuntos de adjetivos.<br>
+    • Arraste os adjetivos <b>de baixo</b> para as <b>4 caixas acima</b>.<br>
+    • Deixe o adjetivo que <b>mais se parece com você</b> no topo (1º).<br>
+    • Deixe o adjetivo que <b>menos se parece com você</b> na última caixa (4º).<br><br>
+    <b>Importante:</b> Responda de forma rápida, espontânea e intuitiva. Não existe certo ou errado.
 </div>
 
-<div class="container-ranking" id="ranking">
-    <div class="slot" data-pos="1">
-        <span class="slot-label">1º</span>
-        <span class="slot-text">O que MAIS se parece com você</span>
+<!-- GRUPO (UM POR VEZ) -->
+<div id="grupo-wrapper">
+    <div class="container-ranking" id="ranking">
+        <div class="slot" data-pos="1">
+            <span class="slot-label">1º</span>
+            <span class="slot-text">O que MAIS se parece com você</span>
+        </div>
+        <div class="slot" data-pos="2">
+            <span class="slot-label">2º</span>
+            <span class="slot-text">O segundo mais parecido</span>
+        </div>
+        <div class="slot" data-pos="3">
+            <span class="slot-label">3º</span>
+            <span class="slot-text">O terceiro mais parecido</span>
+        </div>
+        <div class="slot" data-pos="4">
+            <span class="slot-label">4º</span>
+            <span class="slot-text">O que MENOS se parece com você</span>
+        </div>
     </div>
-    <div class="slot" data-pos="2">
-        <span class="slot-label">2º</span>
-        <span class="slot-text">O segundo mais parecido</span>
-    </div>
-    <div class="slot" data-pos="3">
-        <span class="slot-label">3º</span>
-        <span class="slot-text">O terceiro mais parecido</span>
-    </div>
-    <div class="slot" data-pos="4">
-        <span class="slot-label">4º</span>
-        <span class="slot-text">O que MENOS se parece com você</span>
+
+    <div class="adjetivos-titulo">Adjetivos disponíveis (arraste para as caixas acima):</div>
+    <div class="adjetivos-lista" id="lista"></div>
+
+    <div class="nav-grupo">
+        <button id="btnProximo" onclick="avancarOuFinalizar()">PRÓXIMA PÁGINA</button>
     </div>
 </div>
 
-<div class="adjetivos-titulo">Adjetivos disponíveis (arraste para as caixas acima):</div>
+<!-- RESULTADO -->
+<div id="resultado"></div>
 
-<div class="adjetivos-lista" id="lista">
-    <div class="adjetivo-card" draggable="true" data-id="0">
-        <span class="handle">☰</span>
-        <span>Autoconfiante / Independente / Dominante</span>
-    </div>
-    <div class="adjetivo-card" draggable="true" data-id="1">
-        <span class="handle">☰</span>
-        <span>Comunicativo / Alegre / Extrovertido</span>
-    </div>
-    <div class="adjetivo-card" draggable="true" data-id="2">
-        <span class="handle">☰</span>
-        <span>Acolhedor / Amigável / Paciente</span>
-    </div>
-    <div class="adjetivo-card" draggable="true" data-id="3">
-        <span class="handle">☰</span>
-        <span>Autodisciplinado / Detalhista / Diligente</span>
-    </div>
-</div>
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
-let draggingCard = null;
-let ghost = null;
+/* ---------- CONFIG ---------- */
+emailjs.init("dMy7jYWSeALMDD7TI");
+
+const whatsNumero = "5551995912176";
+const EMAILJS_SERVICE_ID = "service_ir6bq6e";
+const EMAILJS_TEMPLATE_ID = "template_jta671p";
+const EMAILJS_TO = "juniorbernardi@atrius.ind.br";
+
+/* ---------- DADOS ---------- */
+
+let dadosCandidato = {};
+let ultimoResultado = null;
+
+const grupos = [
+    [
+        "Autoconfiante / Independente / Dominante",
+        "Comunicativo / Alegre / Extrovertido",
+        "Acolhedor / Amigável / Paciente",
+        "Autodisciplinado / Atento aos detalhes / Diligente"
+    ],
+    [
+        "Pró-ativo / Empreendedor / Corajoso",
+        "Participativo / Relacional / Flexível",
+        "Agradável / Tranquilo / Organizado",
+        "Criterioso / Cuidadoso / Especialista"
+    ],
+    [
+        "Prático / Rápido / Eficiente",
+        "Persuasivo / Contagiante / Estimulador",
+        "Calmo / Rotineiro / Constante",
+        "Idealizador / Perfeccionista / Diligente"
+    ],
+    [
+        "Objetivo / Assertivo / Focado em resultados / Energético",
+        "Preza pelo prazer / Emotivo / Divertido",
+        "Conciliador / Conselheiro / Bom ouvinte",
+        "Conforme / Sistemático / Sensato"
+    ],
+    [
+        "Determinado / Firme / Energético",
+        "Criativo / Falante / Distraído",
+        "Comedido / Amável / Mediador",
+        "Preciso / Lógico / Racional"
+    ],
+    [
+        "Lutador / Combativo / Agressivo",
+        "Participativo / Facilitador / Influenciador",
+        "Auto-controlado / Conservador / Responsável",
+        "Profundo / Perceptivo / Estratégico"
+    ],
+    [
+        "Automotivado / Pioneiro / Impulsionador",
+        "Articulador / Empolgante / Motivador",
+        "Persistente / Prevenido / Tolerante",
+        "Exato / Exigente / Estruturado"
+    ],
+    [
+        "Resolvedor / Destemido / Desafiador",
+        "Vaidoso / Simpático / Gosta de ser reconhecido",
+        "Aconselhador / Harmônico / Apoiador",
+        "Ponderado / Ordenador / Analisador"
+    ],
+    [
+        "Competitivo / Assume riscos / Desbravador",
+        "Entusiasmado / Impulsivo / Otimista",
+        "Moderado / Equilibrado / Estável",
+        "Teórico / Conservador / Aprofunda conhecimentos"
+    ],
+    [
+        "Direcionador / Solucionador / Empreendedor",
+        "Agregador / Sociável / Mobilizador",
+        "Consolidador / Observador / Diplomata",
+        "Regulador / Especialista / Orientador"
+    ]
+];
+
+const perfis = ["D","I","S","C"];
+
+const descricoesPerfis = {
+    D: "Pessoas com perfil D – Dominância / Executor tendem a ser diretas, objetivas, focadas em resultado e gostam de desafios. Normalmente assumem a liderança e aceleram decisões.",
+    I: "Pessoas com perfil I – Influência / Comunicador tendem a ser sociáveis, otimistas, comunicativas, gostam de se relacionar e influenciar as pessoas ao redor.",
+    S: "Pessoas com perfil S – Estabilidade / Planejador valorizam harmonia, previsibilidade, trabalho em equipe e ambientes mais tranquilos. Costumam ser pacientes e colaborativas.",
+    C: "Pessoas com perfil C – Cautela / Analista são detalhistas, estruturadas, cuidadosas e focadas em qualidade. Gostam de regras claras, precisão e segurança nas decisões."
+};
+
+/* ---------- ESTADO DO TESTE ---------- */
+
+let currentGrupo = 0;
+let respostas = []; // cada posição: array de 4 letras, ex: ["D","I","S","C"]
 
 const lista = document.getElementById("lista");
 const slots = Array.from(document.querySelectorAll(".slot"));
 
-/* ---------- Helpers de ranking ---------- */
+/* ---------- FUNÇÕES DE RANKING (GENÉRICAS) ---------- */
 
 function resetSlotPlaceholder(slot) {
     const pos = slot.getAttribute("data-pos");
@@ -223,7 +509,7 @@ function resetSlotPlaceholder(slot) {
     slot.classList.remove("filled");
 }
 
-function getCurrentOrder() {
+function getCurrentOrderCards() {
     const order = [];
     slots.forEach(slot => {
         const card = slot.querySelector(".adjetivo-card");
@@ -233,7 +519,7 @@ function getCurrentOrder() {
 }
 
 function applyOrder(order) {
-    // devolve todos os cards dos slots pra lista temporariamente
+    // devolve todos os cards para a lista
     slots.forEach(slot => {
         const card = slot.querySelector(".adjetivo-card");
         if (card) lista.appendChild(card);
@@ -253,9 +539,8 @@ function applyOrder(order) {
 }
 
 function insertCardAtIndex(card, targetIndex) {
-    let current = getCurrentOrder();
-    // remove se já estava no ranking (reordenar)
-    current = current.filter(c => c !== card);
+    let current = getCurrentOrderCards();
+    current = current.filter(c => c !== card); // se já estava, remove
 
     if (targetIndex < 0) targetIndex = 0;
     if (targetIndex > current.length) targetIndex = current.length;
@@ -266,78 +551,83 @@ function insertCardAtIndex(card, targetIndex) {
 }
 
 function moveFromRankToList(card) {
-    const current = getCurrentOrder();
+    const current = getCurrentOrderCards();
     const newOrder = current.filter(c => c !== card);
     applyOrder(newOrder);
     lista.appendChild(card);
     card.style.display = "flex";
 }
 
-/* ---------- Drag mobile (touch) ---------- */
+/* ---------- DRAG & DROP ---------- */
 
-document.querySelectorAll(".adjetivo-card").forEach(card => {
-    card.addEventListener("touchstart", e => {
-        draggingCard = card;
+let draggingCard = null;
+let ghost = null;
 
-        ghost = card.cloneNode(true);
-        ghost.classList.add("drag-ghost");
-        document.body.appendChild(ghost);
+function attachDragEventsToCards() {
+    document.querySelectorAll(".adjetivo-card").forEach(card => {
+        // TOUCH
+        card.addEventListener("touchstart", e => {
+            draggingCard = card;
 
-        card.style.opacity = "0.3";
+            ghost = card.cloneNode(true);
+            ghost.classList.add("drag-ghost");
+            document.body.appendChild(ghost);
 
-        const touch = e.touches[0];
-        ghost.style.left = touch.clientX + "px";
-        ghost.style.top = touch.clientY + "px";
-    }, { passive: true });
+            card.style.opacity = "0.3";
 
-    card.addEventListener("touchmove", e => {
-        if (!ghost) return;
-        e.preventDefault();
+            const touch = e.touches[0];
+            ghost.style.left = touch.clientX + "px";
+            ghost.style.top = touch.clientY + "px";
+        }, { passive: true });
 
-        const touch = e.touches[0];
-        ghost.style.left = touch.clientX + "px";
-        ghost.style.top = touch.clientY + "px";
-    }, { passive: false });
+        card.addEventListener("touchmove", e => {
+            if (!ghost) return;
+            e.preventDefault();
 
-    card.addEventListener("touchend", e => {
-        if (!draggingCard) return;
+            const touch = e.touches[0];
+            ghost.style.left = touch.clientX + "px";
+            ghost.style.top = touch.clientY + "px";
+        }, { passive: false });
 
-        draggingCard.style.opacity = "1";
+        card.addEventListener("touchend", e => {
+            if (!draggingCard) return;
 
-        const touch = e.changedTouches[0];
-        const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+            draggingCard.style.opacity = "1";
 
-        const slot = elem ? elem.closest(".slot") : null;
-        const listaDrop = elem ? elem.closest("#lista") : null;
+            const touch = e.changedTouches[0];
+            const elem = document.elementFromPoint(touch.clientX, touch.clientY);
 
-        if (slot) {
-            const targetIndex = slots.indexOf(slot);
-            insertCardAtIndex(draggingCard, targetIndex);
-        } else if (listaDrop) {
-            moveFromRankToList(draggingCard);
-        }
+            const slot = elem ? elem.closest(".slot") : null;
+            const listaDrop = elem ? elem.closest("#lista") : null;
 
-        if (ghost) {
-            ghost.remove();
-            ghost = null;
-        }
-        draggingCard = null;
+            if (slot) {
+                const targetIndex = slots.indexOf(slot);
+                insertCardAtIndex(draggingCard, targetIndex);
+            } else if (listaDrop) {
+                moveFromRankToList(draggingCard);
+            }
+
+            if (ghost) {
+                ghost.remove();
+                ghost = null;
+            }
+            draggingCard = null;
+        });
+
+        // DESKTOP
+        card.addEventListener("dragstart", () => {
+            draggingCard = card;
+            setTimeout(() => card.style.opacity = "0.3", 0);
+        });
+
+        card.addEventListener("dragend", () => {
+            if (draggingCard) draggingCard.style.opacity = "1";
+            draggingCard = null;
+        });
     });
-});
 
-/* ---------- Drag desktop ---------- */
-
-document.querySelectorAll(".adjetivo-card").forEach(card => {
-    card.addEventListener("dragstart", () => {
-        draggingCard = card;
-        setTimeout(() => card.style.opacity = "0.3", 0);
-    });
-
-    card.addEventListener("dragend", () => {
-        if (draggingCard) draggingCard.style.opacity = "1";
-        draggingCard = null;
-    });
-});
+    // Slots e lista já existem desde o início, listeners só precisam ser criados uma vez
+}
 
 slots.forEach(slot => {
     slot.addEventListener("dragover", e => e.preventDefault());
@@ -348,19 +638,275 @@ slots.forEach(slot => {
         insertCardAtIndex(draggingCard, targetIndex);
     });
 
-    // clique no slot devolve o card para a lista
     slot.addEventListener("click", () => {
         const card = slot.querySelector(".adjetivo-card");
         if (card) moveFromRankToList(card);
     });
 });
 
-// lista aceita soltar card para tirar do ranking
 lista.addEventListener("dragover", e => e.preventDefault());
 lista.addEventListener("drop", () => {
     if (!draggingCard) return;
     moveFromRankToList(draggingCard);
 });
+
+/* ---------- CARREGAR GRUPO ---------- */
+
+function limparGrupoAtual() {
+    document.querySelectorAll(".adjetivo-card").forEach(c => c.remove());
+    slots.forEach(slot => resetSlotPlaceholder(slot));
+}
+
+function carregarGrupo(idx) {
+    limparGrupoAtual();
+
+    const adjetivos = grupos[idx];
+    for (let j = 0; j < adjetivos.length; j++) {
+        const card = document.createElement("div");
+        card.className = "adjetivo-card";
+        card.setAttribute("draggable", "true");
+        card.dataset.id = j.toString();
+        card.dataset.profile = perfis[j];
+        card.innerHTML = `<span class="handle">☰</span><span>${adjetivos[j]}</span>`;
+        lista.appendChild(card);
+    }
+
+    attachDragEventsToCards();
+
+    // se já tinha resposta salva, recarregar ordem
+    if (respostas[idx]) {
+        const ordemPerfis = respostas[idx]; // ex: ["D","I","S","C"]
+        const cards = Array.from(document.querySelectorAll(".adjetivo-card"));
+        const ordemCards = [];
+        ordemPerfis.forEach(letra => {
+            const card = cards.find(c => c.dataset.profile === letra);
+            if (card) ordemCards.push(card);
+        });
+        applyOrder(ordemCards);
+    }
+
+    atualizarProgresso();
+    atualizarBotao();
+    window.scrollTo(0,0);
+}
+
+function grupoCompleto() {
+    return getCurrentOrderCards().length === 4;
+}
+
+/* ---------- PROGRESSO ---------- */
+
+function atualizarProgresso() {
+    const total = grupos.length;
+    const atual = currentGrupo + 1;
+    document.getElementById("progresso-numero").innerText = `${atual} de ${total}`;
+    const perc = (atual / total) * 100;
+    document.getElementById("progress-bar").style.width = `${perc}%`;
+}
+
+function atualizarBotao() {
+    const btn = document.getElementById("btnProximo");
+    if (currentGrupo === grupos.length - 1) {
+        btn.textContent = "FINALIZAR TESTE";
+    } else {
+        btn.textContent = "PRÓXIMA PÁGINA";
+    }
+}
+
+/* ---------- FLUXO DO TESTE ---------- */
+
+function iniciarTeste() {
+    const nome = document.getElementById("nome").value.trim();
+    const telefone = document.getElementById("telefone").value.trim();
+    const email = document.getElementById("email").value.trim();
+
+    if (!nome || !telefone || !email) {
+        alert("Preencha Nome, Telefone e E-mail para iniciar.");
+        return;
+    }
+
+    dadosCandidato = { nome, telefone, email };
+
+    document.getElementById("welcome").style.display = "none";
+    document.querySelector(".instrucao").style.display = "block";
+    document.getElementById("progresso").style.display = "block";
+    document.getElementById("grupo-wrapper").style.display = "block";
+
+    currentGrupo = 0;
+    respostas = new Array(grupos.length).fill(null);
+    carregarGrupo(currentGrupo);
+}
+
+function salvarRespostasDoGrupoAtual() {
+    const cards = getCurrentOrderCards(); // na ordem 1º a 4º
+    const ordemPerfis = cards.map(card => card.dataset.profile);
+    respostas[currentGrupo] = ordemPerfis;
+}
+
+function avancarOuFinalizar() {
+    if (!grupoCompleto()) {
+        alert("Preencha as quatro caixas deste grupo antes de avançar.");
+        return;
+    }
+
+    salvarRespostasDoGrupoAtual();
+
+    if (currentGrupo < grupos.length - 1) {
+        currentGrupo++;
+        carregarGrupo(currentGrupo);
+    } else {
+        finalizarTeste();
+    }
+}
+
+/* ---------- CÁLCULO E RESULTADO ---------- */
+
+function finalizarTeste() {
+    // garante que o último grupo foi salvo
+    salvarRespostasDoGrupoAtual();
+    calcular();
+}
+
+function calcular() {
+    let soma = { D:0, I:0, S:0, C:0 };
+    const pontos = [4,3,2,1]; // 1º,2º,3º,4º
+
+    respostas.forEach(ordemPerfis => {
+        ordemPerfis.forEach((letra, idx) => {
+            soma[letra] += pontos[idx];
+        });
+    });
+
+    const ordenado = Object.entries(soma).sort((a,b)=>b[1]-a[1]);
+    const top1 = ordenado[0][0];
+    const top2 = ordenado[1][0];
+
+    ultimoResultado = {
+        ...soma,
+        top1,
+        top2,
+        combinacao: `${top1}-${top2}`
+    };
+
+    mostrarResultado();
+    enviarEmailResultado();
+}
+
+function nomePerfil(letra) {
+    return {
+        D:"Dominância / Executor",
+        I:"Influência / Comunicador",
+        S:"Estabilidade / Planejador",
+        C:"Cautela / Analista"
+    }[letra];
+}
+
+function mostrarResultado() {
+    document.getElementById("grupo-wrapper").style.display = "none";
+    document.querySelector(".instrucao").style.display = "none";
+    document.getElementById("progresso").style.display = "none";
+
+    const r = ultimoResultado;
+
+    const html = `
+        <h2>Resultado do Teste DISC</h2>
+        <p><b>Nome:</b> ${dadosCandidato.nome}</p>
+        <p><b>Telefone:</b> ${dadosCandidato.telefone}</p>
+        <p><b>E-mail:</b> ${dadosCandidato.email}</p>
+
+        <hr>
+
+        <p><b>Pontuações:</b></p>
+
+        <div class="cards-perfil">
+            <div class="card-perfil card-D">
+                D<br>Dominância / Executor
+                <span class="pontuacao">Pontuação: ${r.D}</span>
+            </div>
+            <div class="card-perfil card-I">
+                I<br>Influência / Comunicador
+                <span class="pontuacao">Pontuação: ${r.I}</span>
+            </div>
+            <div class="card-perfil card-S">
+                S<br>Estabilidade / Planejador
+                <span class="pontuacao">Pontuação: ${r.S}</span>
+            </div>
+            <div class="card-perfil card-C">
+                C<br>Cautela / Analista
+                <span class="pontuacao">Pontuação: ${r.C}</span>
+            </div>
+        </div>
+
+        <div class="laudo">
+            <h3>Perfis principais: ${r.top1} e ${r.top2}</h3>
+            <p><b>${r.top1} – ${nomePerfil(r.top1)}:</b> ${descricoesPerfis[r.top1]}</p>
+            <p><b>${r.top2} – ${nomePerfil(r.top2)}:</b> ${descricoesPerfis[r.top2]}</p>
+        </div>
+
+        <br>
+        <button onclick="enviarWhatsApp()">Enviar resultado por WhatsApp</button>
+    `;
+
+    const divRes = document.getElementById("resultado");
+    divRes.innerHTML = html;
+    divRes.style.display = "block";
+}
+
+/* ---------- EMAILJS ---------- */
+
+function enviarEmailResultado() {
+    if (!ultimoResultado) return;
+
+    const r = ultimoResultado;
+
+    const params = {
+        to_email: EMAILJS_TO,
+        nome: dadosCandidato.nome,
+        telefone: dadosCandidato.telefone,
+        email: dadosCandidato.email,
+        d: r.D,
+        i: r.I,
+        s: r.S,
+        c: r.C,
+        combinacao: r.combinacao
+    };
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
+        .then(() => {
+            alert("Resultado enviado para o e-mail da Atrius.");
+        })
+        .catch((erro) => {
+            console.error("Erro ao enviar e-mail:", erro);
+            alert("Não foi possível enviar o resultado por e-mail.");
+        });
+}
+
+/* ---------- WHATSAPP ---------- */
+
+function enviarWhatsApp() {
+    const r = ultimoResultado;
+    if (!r) {
+        alert("Resultado ainda não disponível.");
+        return;
+    }
+
+    const msg = `
+Nova avaliação DISC recebida:
+
+Nome: ${dadosCandidato.nome}
+Telefone: ${dadosCandidato.telefone}
+E-mail: ${dadosCandidato.email}
+
+D: ${r.D}
+I: ${r.I}
+S: ${r.S}
+C: ${r.C}
+
+Combinação principal: ${r.combinacao}
+    `;
+
+    window.open(`https://wa.me/${whatsNumero}?text=${encodeURIComponent(msg)}`);
+}
 </script>
 
 </body>
