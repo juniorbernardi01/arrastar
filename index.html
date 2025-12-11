@@ -66,6 +66,11 @@
         margin-bottom: 18px;
     }
 
+    .campo-duplo {
+        display: flex;
+        gap: 10px;
+    }
+
     .campo label {
         font-weight: bold;
         color: var(--azul);
@@ -318,6 +323,9 @@
         .nav-grupo {
             flex-direction: column;
         }
+        .campo-duplo {
+            flex-direction: column;
+        }
     }
 </style>
 </head>
@@ -335,9 +343,15 @@
     <h2>Bem-vindo ao Teste DISC da Atrius</h2>
     <p>Preencha seus dados para iniciar o teste.</p>
 
-    <div class="campo">
-        <label>Nome completo</label>
-        <input id="nome">
+    <div class="campo campo-duplo">
+        <div style="flex:1">
+            <label>Nome</label>
+            <input id="nome" placeholder="Ex: João">
+        </div>
+        <div style="flex:1">
+            <label>Sobrenome</label>
+            <input id="sobrenome" placeholder="Ex: Silva">
+        </div>
     </div>
 
     <div class="campo">
@@ -741,6 +755,7 @@ function atualizarBotoes() {
 
 function iniciarTeste() {
     const nome = document.getElementById("nome").value.trim();
+    const sobrenome = document.getElementById("sobrenome").value.trim();
     const telefone = document.getElementById("telefone").value.trim();
     const email = document.getElementById("email").value.trim();
 
@@ -748,8 +763,8 @@ function iniciarTeste() {
     const phonePattern = /^\(\d{2}\)\s?\d{5}-\d{4}$/;
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!nome || !telefone || !email) {
-        alert("Preencha Nome, Telefone e E-mail para iniciar.");
+    if (!nome || !sobrenome || !telefone || !email) {
+        alert("Preencha Nome, Sobrenome, Telefone e E-mail para iniciar.");
         return;
     }
     if (!phonePattern.test(telefone)) {
@@ -761,7 +776,7 @@ function iniciarTeste() {
         return;
     }
 
-    dadosCandidato = { nome, telefone, email };
+    dadosCandidato = { nome, sobrenome, telefone, email };
 
     document.getElementById("welcome").style.display = "none";
     document.querySelector(".instrucao").style.display = "block";
@@ -847,6 +862,10 @@ function nomePerfil(letra) {
     }[letra];
 }
 
+function nomeCompleto() {
+    return `${dadosCandidato.nome} ${dadosCandidato.sobrenome}`;
+}
+
 function mostrarResultado() {
     document.getElementById("grupo-wrapper").style.display = "none";
     document.querySelector(".instrucao").style.display = "none";
@@ -856,7 +875,7 @@ function mostrarResultado() {
 
     const html = `
         <h2>Resultado do Teste DISC</h2>
-        <p><b>Nome:</b> ${dadosCandidato.nome}</p>
+        <p><b>Nome:</b> ${nomeCompleto()}</p>
         <p><b>Telefone:</b> ${dadosCandidato.telefone}</p>
         <p><b>E-mail:</b> ${dadosCandidato.email}</p>
 
@@ -907,7 +926,7 @@ function enviarEmailResultado() {
 
     const params = {
         to_email: EMAILJS_TO,
-        nome: dadosCandidato.nome,
+        nome: nomeCompleto(),
         telefone: dadosCandidato.telefone,
         email: dadosCandidato.email,
         d: r.D,
@@ -939,7 +958,7 @@ function enviarWhatsApp() {
     const msg = `
 Nova avaliação DISC recebida:
 
-Nome: ${dadosCandidato.nome}
+Nome: ${nomeCompleto()}
 Telefone: ${dadosCandidato.telefone}
 E-mail: ${dadosCandidato.email}
 
