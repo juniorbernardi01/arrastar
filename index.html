@@ -342,7 +342,7 @@
 
     <div class="campo">
         <label>Telefone (WhatsApp)</label>
-        <input id="telefone" type="tel" placeholder="(51) 99964-1885" maxlength="16">
+        <input id="telefone" type="tel" placeholder="(51) 99999-9999" maxlength="16">
     </div>
 
     <div class="campo">
@@ -420,23 +420,17 @@ const EMAILJS_TO = "juniorbernardi@atrius.ind.br";
 const telefoneInput = document.getElementById("telefone");
 if (telefoneInput) {
     telefoneInput.addEventListener("input", function (e) {
-        let v = e.target.value.replace(/\D/g, "").substring(0,11); // até 11 dígitos
+        let v = e.target.value.replace(/\D/g, "").slice(0, 11); // só números, até 11 dígitos
         let f = "";
 
         if (v.length > 0) {
-            f += "(" + v.substring(0,2);
+            f += "(" + v.slice(0, 2);
         }
         if (v.length >= 3) {
-            f += ") ";
-            if (v.length <= 6) {
-                f += v.substring(2);
-            } else if (v.length === 10) {
-                // telefone fixo: (51) 3456-7890
-                f += v.substring(2,6) + "-" + v.substring(6,10);
-            } else if (v.length >= 11) {
-                // celular: (51) 99964-1885
-                f += v.substring(2,7) + "-" + v.substring(7,11);
-            }
+            f += ") " + v.slice(2, 7);  // até 5 dígitos após o DDD
+        }
+        if (v.length >= 8) {
+            f += "-" + v.slice(7, 11); // 4 últimos dígitos
         }
 
         e.target.value = f;
@@ -750,7 +744,8 @@ function iniciarTeste() {
     const telefone = document.getElementById("telefone").value.trim();
     const email = document.getElementById("email").value.trim();
 
-    const phonePattern = /^\(\d{2}\)\s?\d{4,5}-\d{4}$/;
+    // Formato (51) 99999-9999
+    const phonePattern = /^\(\d{2}\)\s?\d{5}-\d{4}$/;
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!nome || !telefone || !email) {
@@ -758,7 +753,7 @@ function iniciarTeste() {
         return;
     }
     if (!phonePattern.test(telefone)) {
-        alert("Digite o telefone no formato (51) 99964-1885.");
+        alert("Digite o telefone no formato (51) 99999-9999.");
         return;
     }
     if (!emailPattern.test(email)) {
