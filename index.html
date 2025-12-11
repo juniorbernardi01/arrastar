@@ -1,135 +1,229 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teste DISC – Drag & Drop Premium</title>
+<title>Ranking DISC – Grupo Premium</title>
 
 <style>
     body {
         font-family: Arial, sans-serif;
-        background: #f4f6f9;
+        background: #f3f4f6;
         padding: 20px;
     }
 
-    h3 {
-        margin: 10px 0 5px 5px;
-        font-weight: bold;
-        color: #333;
+    h2, h3 {
+        color: #1B4B8C;
+        text-align: center;
+        margin-top: 5px;
     }
 
-    .drag-container {
+    .container-ranking {
         border: 2px solid #ccc;
-        border-radius: 10px;
-        padding: 15px;
         background: white;
-        margin-bottom: 10px;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
     }
 
-    .card {
-        background: #f1f1f1;
+    .slot {
+        background: #f7f7f7;
+        border: 2px dashed #bbb;
+        border-radius: 12px;
+        padding: 18px;
+        min-height: 70px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .slot.filled {
+        border-style: solid;
+        border-color: #1B4B8C;
+        background: #eaf1ff;
+        color: #1B4B8C;
+        font-weight: bold;
+    }
+
+    .adjetivos-lista {
+        margin-top: 25px;
+    }
+
+    .adjetivo-card {
+        background: #ffffff;
         padding: 15px;
+        border-radius: 12px;
         margin-bottom: 10px;
-        border-radius: 10px;
-        cursor: grab;
+        font-size: 16px;
         display: flex;
         align-items: center;
         gap: 10px;
-        font-size: 16px;
-        transition: transform 0.2s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        cursor: grab;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+        transition: transform 0.1s ease;
     }
 
-    .card:active {
+    .adjetivo-card:active {
+        transform: scale(1.02);
         cursor: grabbing;
-        transform: scale(1.03);
     }
 
     .handle {
         font-size: 20px;
-        color: #444;
-        cursor: grab;
+        color: #333;
     }
 
-    .placeholder {
-        height: 55px;
-        border: 2px dashed #bbb;
-        border-radius: 10px;
-        margin-bottom: 10px;
+    /* Fantasma do card quando segue o dedo */
+    .drag-ghost {
+        position: fixed;
+        z-index: 9999;
+        width: 80%;
+        padding: 15px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.25);
+        pointer-events: none;
+        opacity: 0.95;
+        transform: translate(-50%, -50%);
     }
 </style>
 </head>
+
 <body>
 
-<h3>Muito parecido comigo</h3>
+<h2>Grupo 1</h2>
+<h3>Arraste para colocar em ordem:</h3>
+<h3 style="margin-top: -5px;">(do mais parecido → menos parecido)</h3>
 
-<div id="group1" class="drag-container">
-    <div class="card" draggable="true"><span class="handle">☰</span>Autoconfiante / Independente / Dominante</div>
-    <div class="card" draggable="true"><span class="handle">☰</span>Comunicativo / Alegre / Extrovertido</div>
-    <div class="card" draggable="true"><span class="handle">☰</span>Acolhedor / Amigável / Paciente</div>
-    <div class="card" draggable="true"><span class="handle">☰</span>Autodisciplinado / Detalhista / Diligente</div>
+<div class="container-ranking" id="ranking">
+    <div class="slot" data-pos="1">1º Lugar – Coloque aqui o que MAIS se parece com você</div>
+    <div class="slot" data-pos="2">2º Lugar – Coloque aqui o SEGUNDO mais parecido</div>
+    <div class="slot" data-pos="3">3º Lugar – Coloque aqui o TERCEIRO mais parecido</div>
+    <div class="slot" data-pos="4">4º Lugar – Coloque aqui o que MENOS se parece com você</div>
 </div>
 
-<h3>Pouco parecido comigo</h3>
+<h3>Adjetivos disponíveis</h3>
+
+<div class="adjetivos-lista" id="lista">
+    <div class="adjetivo-card" draggable="true" data-id="0"><span class="handle">☰</span>Autoconfiante / Independente / Dominante</div>
+    <div class="adjetivo-card" draggable="true" data-id="1"><span class="handle">☰</span>Comunicativo / Alegre / Extrovertido</div>
+    <div class="adjetivo-card" draggable="true" data-id="2"><span class="handle">☰</span>Acolhedor / Amigável / Paciente</div>
+    <div class="adjetivo-card" draggable="true" data-id="3"><span class="handle">☰</span>Autodisciplinado / Detalhista / Diligente</div>
+</div>
 
 <script>
 let draggingCard = null;
-let placeholder = document.createElement("div");
-placeholder.className = "placeholder";
+let ghost = null;
+let originList = document.getElementById("lista");
 
-document.querySelectorAll(".card").forEach(card => {
-    card.addEventListener("touchstart", startDrag, { passive: true });
-    card.addEventListener("touchmove", moveDrag, { passive: false });
-    card.addEventListener("touchend", endDrag);
+/* ---------------- MOBILE DRAG (segue o dedo) ---------------- */
 
-    card.addEventListener("dragstart", (e) => {
+document.querySelectorAll(".adjetivo-card").forEach(card => {
+
+    /* TOUCH START */
+    card.addEventListener("touchstart", e => {
         draggingCard = card;
-        setTimeout(() => card.style.display = "none", 0);
-    });
 
-    card.addEventListener("dragend", () => {
-        card.style.display = "flex";
+        ghost = card.cloneNode(true);
+        ghost.classList.add("drag-ghost");
+        ghost.style.width = card.offsetWidth + "px";
+        document.body.appendChild(ghost);
+
+        card.style.opacity = "0.3";
+
+        const touch = e.touches[0];
+        ghost.style.left = touch.clientX + "px";
+        ghost.style.top = touch.clientY + "px";
+    }, { passive: true });
+
+    /* TOUCH MOVE */
+    card.addEventListener("touchmove", e => {
+        if (!ghost) return;
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        ghost.style.left = touch.clientX + "px";
+        ghost.style.top = touch.clientY + "px";
+    }, { passive: false });
+
+    /* TOUCH END */
+    card.addEventListener("touchend", e => {
+        if (!draggingCard) return;
+
+        draggingCard.style.opacity = "1";
+
+        const touch = e.changedTouches[0];
+        const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        const slot = elem ? elem.closest(".slot") : null;
+
+        if (slot) {
+            preencherSlot(slot, draggingCard);
+        }
+
+        ghost.remove();
+        ghost = null;
         draggingCard = null;
-        placeholder.remove();
     });
 });
 
-function startDrag(e) {
-    draggingCard = e.target.closest(".card");
-    draggingCard.style.opacity = "0.7";
+/* ---------------- DESKTOP DRAG ---------------- */
 
-    draggingCard.parentNode.insertBefore(placeholder, draggingCard.nextSibling);
+document.querySelectorAll(".adjetivo-card").forEach(card => {
+    card.addEventListener("dragstart", () => {
+        draggingCard = card;
+        setTimeout(() => card.style.opacity = "0.3", 0);
+    });
+
+    card.addEventListener("dragend", () => {
+        draggingCard.style.opacity = "1";
+        draggingCard = null;
+    });
+});
+
+document.querySelectorAll(".slot").forEach(slot => {
+
+    slot.addEventListener("dragover", e => e.preventDefault());
+
+    slot.addEventListener("drop", () => {
+        if (!draggingCard) return;
+        preencherSlot(slot, draggingCard);
+    });
+
+    slot.addEventListener("click", () => {
+        if (slot.dataset.cardId) removerDoSlot(slot);
+    });
+});
+
+/* ---------------- FUNÇÕES PRINCIPAIS ---------------- */
+
+function preencherSlot(slot, card) {
+
+    removerDoSlot(slot);
+
+    slot.textContent = card.textContent;
+    slot.classList.add("filled");
+    slot.dataset.cardId = card.dataset.id;
+
+    card.style.display = "none";
 }
 
-function moveDrag(e) {
-    e.preventDefault();
+function removerDoSlot(slot) {
+    const id = slot.dataset.cardId;
+    if (!id) return;
 
-    let touch = e.touches[0];
-    let card = draggingCard;
-    let container = document.getElementById("group1");
-    let elements = [...container.querySelectorAll(".card:not(.placeholder)")];
+    const card = document.querySelector(`.adjetivo-card[data-id="${id}"]`);
+    if (card) card.style.display = "flex";
 
-    let closest = elements.reduce((closestElem, child) => {
-        let offset = touch.clientY - child.offsetTop - child.offsetHeight / 2;
-        if (offset < 0 && offset > closestElem.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closestElem;
-        }
-    }, { offset: Number.NEGATIVE_INFINITY });
-
-    if (closest.element) {
-        container.insertBefore(placeholder, closest.element);
-    } else {
-        container.appendChild(placeholder);
-    }
+    slot.textContent = slot.dataset.pos + "º Lugar – Coloque aqui";
+    slot.classList.remove("filled");
+    delete slot.dataset.cardId;
 }
 
-function endDrag() {
-    draggingCard.style.opacity = "1";
-    placeholder.replaceWith(draggingCard);
-    draggingCard = null;
-}
 </script>
 
 </body>
