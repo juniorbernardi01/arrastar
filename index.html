@@ -481,10 +481,12 @@ grupos.forEach((linha, i) => {
 });
 document.getElementById("formulario").innerHTML = html;
 
-/* --------- DRAG & DROP --------- */
+/* --------- DRAG & DROP (DESKTOP + TOUCH) --------- */
 
 let draggedChip = null;
+let draggingTouch = false;
 
+// Desktop drag
 document.querySelectorAll(".numero-chip").forEach(chip => {
     chip.addEventListener("dragstart", (e) => {
         draggedChip = chip;
@@ -494,8 +496,55 @@ document.querySelectorAll(".numero-chip").forEach(chip => {
     chip.addEventListener("dragend", () => {
         draggedChip = null;
     });
+
+    // Touch start (mobile)
+    chip.addEventListener("touchstart", (e) => {
+        draggedChip = chip;
+        draggingTouch = true;
+        e.preventDefault(); // não abrir menus, etc.
+    });
 });
 
+// Impede scroll enquanto estiver arrastando com o dedo
+document.addEventListener("touchmove", (e) => {
+    if (draggingTouch) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// Touch end: solta o número onde o dedo parou
+document.addEventListener("touchend", (e) => {
+    if (!draggingTouch || !draggedChip) return;
+    draggingTouch = false;
+
+    const touch = e.changedTouches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!target) {
+        draggedChip = null;
+        return;
+    }
+
+    const dz = target.closest(".dropzone");
+    if (!dz) {
+        draggedChip = null;
+        return;
+    }
+
+    const valor = draggedChip.getAttribute("data-valor");
+    const groupIndex = dz.getAttribute("data-group");
+    const chipGroup = draggedChip.getAttribute("data-group");
+
+    if (groupIndex !== chipGroup) {
+        alert("Use apenas os números deste grupo.");
+        draggedChip = null;
+        return;
+    }
+
+    aplicarNumeroNoDropzone(groupIndex, dz, valor, draggedChip);
+    draggedChip = null;
+});
+
+// Dropzones (desktop drag)
 document.querySelectorAll(".dropzone").forEach(dz => {
     dz.addEventListener("dragover", (e) => {
         e.preventDefault();
