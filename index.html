@@ -32,7 +32,7 @@
         border-bottom: 4px solid var(--azul);
         padding: 20px 0 10px 0;
         text-align: center;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
 
     .header img {
@@ -157,41 +157,43 @@
         font-size: 20px;
     }
 
-    .grupo-layout {
-        display: grid;
-        grid-template-columns: 1fr 3fr;
-        gap: 20px;
-        align-items: flex-start;
+    .numeros-disponiveis {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
     }
 
-    .col-numeros {
-        background: #f7f7f7;
-        border-radius: 8px;
-        padding: 10px;
-        border: 1px solid #ddd;
-    }
-
-    .col-numeros h4 {
-        margin-top: 0;
-        margin-bottom: 10px;
+    .numeros-disponiveis h4 {
+        margin: 0 10px 0 0;
         font-size: 14px;
+        color: var(--azul);
+        align-self: center;
+    }
+
+    .numero-chip {
+        background: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        cursor: pointer;
+        user-select: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .numero-chip.ativo {
+        border-color: var(--azul);
+        background: #e6f0ff;
         color: var(--azul);
     }
 
-    .numero-item {
-        background: #ffffff;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        padding: 10px;
-        text-align: center;
-        margin-bottom: 8px;
+    .numero-chip:active {
         cursor: grab;
-        font-weight: bold;
-        user-select: none;
-    }
-
-    .numero-item:active {
-        cursor: grabbing;
     }
 
     .col-itens {
@@ -203,25 +205,35 @@
     .item {
         background: #fafafa;
         border: 1px solid #ddd;
-        padding: 12px;
+        padding: 10px;
         border-radius: 8px;
         font-size: 15px;
         line-height: 1.4;
-        min-height: 110px;
+        min-height: 70px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
+    }
+
+    .linha-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .texto-adjetivo {
+        font-size: 14px;
     }
 
     .dropzone {
-        margin-top: 10px;
         padding: 8px;
         border-radius: 6px;
         border: 2px dashed #bbb;
         text-align: center;
         font-size: 14px;
         color: #777;
-        min-height: 34px;
+        min-width: 50px;
         background: #fff;
     }
 
@@ -295,9 +307,6 @@
     }
 
     @media(max-width:768px){
-        .grupo-layout {
-            grid-template-columns: 1fr;
-        }
         .col-itens {
             grid-template-columns: 1fr;
         }
@@ -433,37 +442,39 @@ const descricoesPerfis = {
     C: "Pessoas com perfil C – Cautela / Analista são detalhistas, estruturadas, cuidadosas e focadas em qualidade. Gostam de regras claras, precisão e segurança nas decisões."
 };
 
-/* --------- MONTA OS GRUPOS (DRAG & DROP) --------- */
+/* --------- MONTA OS GRUPOS (TOQUE + ARRASTAR) --------- */
 
 let html = "";
 grupos.forEach((linha, i) => {
     html += `
         <div class="grupo-container" id="grupo-${i}">
             <h3>Grupo ${i+1}</h3>
-            <div class="grupo-layout">
-                <div class="col-numeros">
-                    <h4>Números disponíveis</h4>
-                    <div class="numero-item" draggable="true" data-valor="1">1</div>
-                    <div class="numero-item" draggable="true" data-valor="2">2</div>
-                    <div class="numero-item" draggable="true" data-valor="3">3</div>
-                    <div class="numero-item" draggable="true" data-valor="4">4</div>
-                </div>
-                <div class="col-itens">`;
+
+            <div class="numeros-disponiveis" data-group="${i}">
+                <h4>Números:</h4>
+                <div class="numero-chip" draggable="true" data-group="${i}" data-valor="1">1</div>
+                <div class="numero-chip" draggable="true" data-group="${i}" data-valor="2">2</div>
+                <div class="numero-chip" draggable="true" data-group="${i}" data-valor="3">3</div>
+                <div class="numero-chip" draggable="true" data-group="${i}" data-valor="4">4</div>
+            </div>
+
+            <div class="col-itens">`;
 
     linha.forEach((texto, j) => {
         html += `
-                    <div class="item">
-                        <div>${texto}</div>
+                <div class="item">
+                    <div class="linha-item">
                         <div class="dropzone"
                              data-group="${i}"
                              data-index="${j}">
-                             Arraste um número aqui
+                             Toque ou arraste
                         </div>
-                    </div>`;
+                        <div class="texto-adjetivo">${texto}</div>
+                    </div>
+                </div>`;
     });
 
     html += `
-                </div>
             </div>`;
 
     if (i < grupos.length - 1) {
@@ -476,17 +487,39 @@ grupos.forEach((linha, i) => {
 });
 document.getElementById("formulario").innerHTML = html;
 
-/* --------- DRAG & DROP LÓGICA --------- */
+/* --------- TOQUE E ARRASTAR LÓGICA --------- */
 
 let numeroArrastando = null;
+let selectedNumero = null;
+let selectedChip = null;
+let selectedGroup = null;
 
-document.querySelectorAll(".numero-item").forEach(el => {
-    el.addEventListener("dragstart", (e) => {
-        numeroArrastando = e.target.getAttribute("data-valor");
+// Clique nos chips (modo toque)
+document.querySelectorAll(".numero-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+        const valor = chip.getAttribute("data-valor");
+        const grupo = chip.getAttribute("data-group");
+
+        // limpa seleção anterior no mesmo grupo
+        document
+          .querySelectorAll(`.numero-chip[data-group="${grupo}"]`)
+          .forEach(c => c.classList.remove("ativo"));
+
+        chip.classList.add("ativo");
+        selectedNumero = valor;
+        selectedChip = chip;
+        selectedGroup = grupo;
+    });
+
+    // drag start (modo arrastar)
+    chip.addEventListener("dragstart", (e) => {
+        numeroArrastando = chip.getAttribute("data-valor");
+        selectedGroup = chip.getAttribute("data-group");
         e.dataTransfer.setData("text/plain", numeroArrastando);
     });
 });
 
+// Dropzones
 document.querySelectorAll(".dropzone").forEach(dz => {
     dz.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -501,31 +534,48 @@ document.querySelectorAll(".dropzone").forEach(dz => {
         e.preventDefault();
         dz.classList.remove("sobre");
         const valor = e.dataTransfer.getData("text/plain") || numeroArrastando;
-        if (!valor) return;
-
         const groupIndex = dz.getAttribute("data-group");
 
-        // remove esse valor de qualquer outra dropzone do mesmo grupo
-        document.querySelectorAll(`.dropzone[data-group="${groupIndex}"]`).forEach(outra => {
-            if (outra !== dz && outra.dataset.valor === valor) {
-                outra.dataset.valor = "";
-                outra.textContent = "Arraste um número aqui";
-                outra.classList.remove("preenchido");
-            }
-        });
+        if (!valor) return;
+        if (selectedGroup !== null && groupIndex !== selectedGroup) {
+            alert("Use apenas os números deste grupo.");
+            return;
+        }
 
-        dz.dataset.valor = valor;
-        dz.textContent = valor;
-        dz.classList.add("preenchido");
+        aplicarNumeroNoDropzone(groupIndex, dz, valor);
     });
 
-    // limpar clicando
+    // clique na dropzone (modo toque)
     dz.addEventListener("click", () => {
-        dz.dataset.valor = "";
-        dz.textContent = "Arraste um número aqui";
-        dz.classList.remove("preenchido");
+        const groupIndex = dz.getAttribute("data-group");
+        if (!selectedNumero || selectedGroup === null) {
+            alert("Toque primeiro em um número (1, 2, 3 ou 4) acima.");
+            return;
+        }
+        if (groupIndex !== selectedGroup) {
+            alert("Use apenas os números deste grupo.");
+            return;
+        }
+        aplicarNumeroNoDropzone(groupIndex, dz, selectedNumero);
     });
 });
+
+function aplicarNumeroNoDropzone(groupIndex, dz, valor) {
+    // remove esse valor de qualquer outra dropzone do mesmo grupo
+    document
+      .querySelectorAll(`.dropzone[data-group="${groupIndex}"]`)
+      .forEach(outra => {
+          if (outra !== dz && outra.dataset.valor === valor) {
+              outra.dataset.valor = "";
+              outra.textContent = "Toque ou arraste";
+              outra.classList.remove("preenchido");
+          }
+      });
+
+    dz.dataset.valor = valor;
+    dz.textContent = valor;
+    dz.classList.add("preenchido");
+}
 
 /* --------- INICIAR TESTE --------- */
 
