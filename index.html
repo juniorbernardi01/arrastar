@@ -162,13 +162,13 @@
         gap: 10px;
         margin-bottom: 15px;
         flex-wrap: wrap;
+        align-items: center;
     }
 
     .numeros-disponiveis h4 {
         margin: 0 10px 0 0;
         font-size: 14px;
         color: var(--azul);
-        align-self: center;
     }
 
     .numero-chip {
@@ -181,19 +181,13 @@
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        cursor: pointer;
+        cursor: grab;
         user-select: none;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
-    .numero-chip.ativo {
-        border-color: var(--azul);
-        background: #e6f0ff;
-        color: var(--azul);
-    }
-
     .numero-chip:active {
-        cursor: grab;
+        cursor: grabbing;
     }
 
     .col-itens {
@@ -442,7 +436,7 @@ const descricoesPerfis = {
     C: "Pessoas com perfil C – Cautela / Analista são detalhistas, estruturadas, cuidadosas e focadas em qualidade. Gostam de regras claras, precisão e segurança nas decisões."
 };
 
-/* --------- MONTA OS GRUPOS (TOQUE + ARRASTAR) --------- */
+/* --------- MONTA OS GRUPOS --------- */
 
 let html = "";
 grupos.forEach((linha, i) => {
@@ -467,7 +461,7 @@ grupos.forEach((linha, i) => {
                         <div class="dropzone"
                              data-group="${i}"
                              data-index="${j}">
-                             Toque ou arraste
+                             Arraste o número
                         </div>
                         <div class="texto-adjetivo">${texto}</div>
                     </div>
@@ -487,39 +481,21 @@ grupos.forEach((linha, i) => {
 });
 document.getElementById("formulario").innerHTML = html;
 
-/* --------- TOQUE E ARRASTAR LÓGICA --------- */
+/* --------- DRAG & DROP --------- */
 
-let numeroArrastando = null;
-let selectedNumero = null;
-let selectedChip = null;
-let selectedGroup = null;
+let draggedChip = null;
 
-// Clique nos chips (modo toque)
 document.querySelectorAll(".numero-chip").forEach(chip => {
-    chip.addEventListener("click", () => {
-        const valor = chip.getAttribute("data-valor");
-        const grupo = chip.getAttribute("data-group");
-
-        // limpa seleção anterior no mesmo grupo
-        document
-          .querySelectorAll(`.numero-chip[data-group="${grupo}"]`)
-          .forEach(c => c.classList.remove("ativo"));
-
-        chip.classList.add("ativo");
-        selectedNumero = valor;
-        selectedChip = chip;
-        selectedGroup = grupo;
+    chip.addEventListener("dragstart", (e) => {
+        draggedChip = chip;
+        e.dataTransfer.setData("text/plain", chip.getAttribute("data-valor"));
     });
 
-    // drag start (modo arrastar)
-    chip.addEventListener("dragstart", (e) => {
-        numeroArrastando = chip.getAttribute("data-valor");
-        selectedGroup = chip.getAttribute("data-group");
-        e.dataTransfer.setData("text/plain", numeroArrastando);
+    chip.addEventListener("dragend", () => {
+        draggedChip = null;
     });
 });
 
-// Dropzones
 document.querySelectorAll(".dropzone").forEach(dz => {
     dz.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -533,48 +509,72 @@ document.querySelectorAll(".dropzone").forEach(dz => {
     dz.addEventListener("drop", (e) => {
         e.preventDefault();
         dz.classList.remove("sobre");
-        const valor = e.dataTransfer.getData("text/plain") || numeroArrastando;
-        const groupIndex = dz.getAttribute("data-group");
 
-        if (!valor) return;
-        if (selectedGroup !== null && groupIndex !== selectedGroup) {
+        const valor = e.dataTransfer.getData("text/plain");
+        if (!valor || !draggedChip) return;
+
+        const groupIndex = dz.getAttribute("data-group");
+        const chipGroup = draggedChip.getAttribute("data-group");
+
+        if (groupIndex !== chipGroup) {
             alert("Use apenas os números deste grupo.");
             return;
         }
 
-        aplicarNumeroNoDropzone(groupIndex, dz, valor);
+        aplicarNumeroNoDropzone(groupIndex, dz, valor, draggedChip);
     });
 
-    // clique na dropzone (modo toque)
+    // clique para limpar e devolver número ao pool
     dz.addEventListener("click", () => {
         const groupIndex = dz.getAttribute("data-group");
-        if (!selectedNumero || selectedGroup === null) {
-            alert("Toque primeiro em um número (1, 2, 3 ou 4) acima.");
-            return;
+        const valorAtual = dz.dataset.valor;
+        if (!valorAtual) return;
+
+        const chip = document.querySelector(
+            `.numero-chip[data-group="${groupIndex}"][data-valor="${valorAtual}"]`
+        );
+        if (chip) {
+            chip.style.visibility = "visible";
         }
-        if (groupIndex !== selectedGroup) {
-            alert("Use apenas os números deste grupo.");
-            return;
-        }
-        aplicarNumeroNoDropzone(groupIndex, dz, selectedNumero);
+
+        dz.dataset.valor = "";
+        dz.textContent = "Arraste o número";
+        dz.classList.remove("preenchido");
     });
 });
 
-function aplicarNumeroNoDropzone(groupIndex, dz, valor) {
-    // remove esse valor de qualquer outra dropzone do mesmo grupo
-    document
-      .querySelectorAll(`.dropzone[data-group="${groupIndex}"]`)
-      .forEach(outra => {
-          if (outra !== dz && outra.dataset.valor === valor) {
-              outra.dataset.valor = "";
-              outra.textContent = "Toque ou arraste";
-              outra.classList.remove("preenchido");
-          }
-      });
+function aplicarNumeroNoDropzone(groupIndex, dz, valor, chip) {
+    // Se essa dropzone já tinha um número, devolve ao pool
+    const valorAntigo = dz.dataset.valor;
+    if (valorAntigo) {
+        const chipAntigo = document.querySelector(
+            `.numero-chip[data-group="${groupIndex}"][data-valor="${valorAntigo}"]`
+        );
+        if (chipAntigo) {
+            chipAntigo.style.visibility = "visible";
+        }
+    }
 
+    // Remove esse valor de qualquer outra dropzone do mesmo grupo
+    document
+        .querySelectorAll(`.dropzone[data-group="${groupIndex}"]`)
+        .forEach(outra => {
+            if (outra !== dz && outra.dataset.valor === valor) {
+                outra.dataset.valor = "";
+                outra.textContent = "Arraste o número";
+                outra.classList.remove("preenchido");
+            }
+        });
+
+    // Aplica o número na dropzone alvo
     dz.dataset.valor = valor;
     dz.textContent = valor;
     dz.classList.add("preenchido");
+
+    // Faz o número "sumir" do pool
+    if (chip) {
+        chip.style.visibility = "hidden";
+    }
 }
 
 /* --------- INICIAR TESTE --------- */
