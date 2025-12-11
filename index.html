@@ -12,10 +12,11 @@
         padding: 12px;
     }
 
-    h2, h3 {
+    h2 {
         color: #1B4B8C;
         text-align: center;
         margin: 4px 0;
+        font-size: 18px;
     }
 
     .subtexto {
@@ -139,7 +140,23 @@
 
 <body>
 
-<h2>Grupo 1</h2>
+<!-- Barra de progresso -->
+<h2>1 de 10</h2>
+<div style="
+    width: 100%;
+    height: 6px;
+    background: #dbe3f5;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    overflow: hidden;">
+    <div id="progressBar" style="
+        width: 10%;
+        height: 100%;
+        background: #1B4B8C;
+        border-radius: 4px;">
+    </div>
+</div>
+
 <div class="subtexto">
     Arraste os adjetivos <b>de baixo</b> para as caixas <b>acima</b>.<br>
     <b>Topo = mais parecido com você</b> &mdash; <b>Última caixa = menos parecido</b>.
@@ -216,14 +233,14 @@ function getCurrentOrder() {
 }
 
 function applyOrder(order) {
-    // Devolve todos os cards dos slots pra lista temporariamente
+    // devolve todos os cards dos slots pra lista temporariamente
     slots.forEach(slot => {
         const card = slot.querySelector(".adjetivo-card");
         if (card) lista.appendChild(card);
         resetSlotPlaceholder(slot);
     });
 
-    // Coloca os cards na ordem nos slots 1..4
+    // coloca os cards na ordem nos slots 1..4
     order.forEach((card, idx) => {
         if (idx >= slots.length) return;
         const slot = slots[idx];
@@ -237,7 +254,7 @@ function applyOrder(order) {
 
 function insertCardAtIndex(card, targetIndex) {
     let current = getCurrentOrder();
-    // Remove se já estava no ranking (reordenar)
+    // remove se já estava no ranking (reordenar)
     current = current.filter(c => c !== card);
 
     if (targetIndex < 0) targetIndex = 0;
@@ -299,7 +316,6 @@ document.querySelectorAll(".adjetivo-card").forEach(card => {
         } else if (listaDrop) {
             moveFromRankToList(draggingCard);
         }
-        // Se soltar em qualquer outro lugar, não muda a ordem
 
         if (ghost) {
             ghost.remove();
@@ -332,14 +348,14 @@ slots.forEach(slot => {
         insertCardAtIndex(draggingCard, targetIndex);
     });
 
-    // Clique no slot devolve o card para a lista
+    // clique no slot devolve o card para a lista
     slot.addEventListener("click", () => {
         const card = slot.querySelector(".adjetivo-card");
         if (card) moveFromRankToList(card);
     });
 });
 
-// Lista aceita soltar card para tirar do ranking
+// lista aceita soltar card para tirar do ranking
 lista.addEventListener("dragover", e => e.preventDefault());
 lista.addEventListener("drop", () => {
     if (!draggingCard) return;
